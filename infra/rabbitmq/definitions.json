@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "name": "contractflow",
+      "password_hash": "8tkfPq9CQc8MaMfP0xBDf+PXK9Uq44BIIH54cFIDm/g5ikHb",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["administrator"],
+      "limits": {}
+    }
+  ],
+  "vhosts": [{ "name": "/" }],
+  "permissions": [
+    {
+      "user": "contractflow",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "contractflow.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "contractflow.events.dlx",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "contractflow.ai.index",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "contractflow.events.dlx"
+      }
+    },
+    {
+      "name": "contractflow.ai.compare",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "contractflow.events.dlx"
+      }
+    },
+    {
+      "name": "contractflow.pdf.generate",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "contractflow.events.dlx"
+      }
+    },
+    {
+      "name": "contractflow.api.results",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "contractflow.events.dlx"
+      }
+    },
+    {
+      "name": "contractflow.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "contractflow.events",
+      "vhost": "/",
+      "destination": "contractflow.ai.index",
+      "destination_type": "queue",
+      "routing_key": "document.uploaded.v1",
+      "arguments": {}
+    },
+    {
+      "source": "contractflow.events",
+      "vhost": "/",
+      "destination": "contractflow.ai.compare",
+      "destination_type": "queue",
+      "routing_key": "comparison.requested.v1",
+      "arguments": {}
+    },
+    {
+      "source": "contractflow.events",
+      "vhost": "/",
+      "destination": "contractflow.pdf.generate",
+      "destination_type": "queue",
+      "routing_key": "report.requested.v1",
+      "arguments": {}
+    },
+    {
+      "source": "contractflow.events",
+      "vhost": "/",
+      "destination": "contractflow.api.results",
+      "destination_type": "queue",
+      "routing_key": "comparison.*.v1",
+      "arguments": {}
+    },
+    {
+      "source": "contractflow.events",
+      "vhost": "/",
+      "destination": "contractflow.api.results",
+      "destination_type": "queue",
+      "routing_key": "report.*.v1",
+      "arguments": {}
+    },
+    {
+      "source": "contractflow.events.dlx",
+      "vhost": "/",
+      "destination": "contractflow.dlq",
+      "destination_type": "queue",
+      "routing_key": "#",
+      "arguments": {}
+    }
+  ]
+}

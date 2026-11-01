@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "preline/variants.css";
+@source "../node_modules/preline/dist/*.js";
+@plugin "@tailwindcss/forms";
+@import "preline/theme.css";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Source Serif 4", ui-serif, Georgia, serif;
+  --color-brand-50: #ecfdf8;
+  --color-brand-100: #d1faf0;
+  --color-brand-500: #0d9488;
+  --color-brand-600: #0f766e;
+  --color-brand-700: #115e59;
+  --color-ink: #0f172a;
+  --color-paper: #f8fafc;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+}

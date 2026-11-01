@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://contractflow.local/schemas/grafana-dashboard-provider.schema.json",
+  "title": "Grafana dashboard provider provisioning",
+  "type": "object",
+  "required": ["apiVersion", "providers"],
+  "additionalProperties": true,
+  "properties": {
+    "apiVersion": {
+      "oneOf": [{ "type": "integer" }, { "type": "string" }]
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "options"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "orgId": { "type": "integer" },
+          "folder": { "type": "string" },
+          "type": { "type": "string" },
+          "disableDeletion": { "type": "boolean" },
+          "updateIntervalSeconds": { "type": "integer" },
+          "options": {
+            "type": "object",
+            "required": ["path"],
+            "additionalProperties": true,
+            "properties": {
+              "path": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

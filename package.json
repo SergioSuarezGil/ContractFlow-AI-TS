@@ -1,0 +1,33 @@
+{
+  "name": "contractflow-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ContractFlow AI — TypeScript monorepo (NestJS microservices + web demo)",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "contracts-api:dev": "pnpm --filter @contractflow/contracts-api start:dev",
+    "ai-worker:dev": "pnpm --filter @contractflow/ai-worker start:dev",
+    "pdf-worker:dev": "pnpm --filter @contractflow/pdf-worker start:dev",
+    "web-demo:dev": "pnpm --filter @contractflow/web-demo dev",
+    "web-demo:build": "pnpm --filter @contractflow/web-demo build",
+    "openapi:export": "node scripts/export-openapi.mjs",
+    "openapi:generate": "node scripts/generate-api-client.mjs",
+    "openapi:sync": "pnpm openapi:export && pnpm openapi:generate",
+    "infra:up": "docker compose -f infra/compose.yaml up -d",
+    "infra:down": "docker compose -f infra/compose.yaml down",
+    "stack:up": "GIT_SHA=$(git rev-parse --short HEAD) BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) docker compose -f infra/compose.yaml -f infra/compose.typescript.yaml up -d --build",
+    "stack:down": "docker compose -f infra/compose.yaml -f infra/compose.typescript.yaml down",
+    "stack:logs": "docker compose -f infra/compose.yaml -f infra/compose.typescript.yaml logs -f",
+    "obs:up": "GIT_SHA=$(git rev-parse --short HEAD) BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) docker compose -f infra/compose.yaml -f infra/compose.typescript.yaml -f infra/compose.observability.yaml up -d",
+    "obs:down": "docker compose -f infra/compose.yaml -f infra/compose.typescript.yaml -f infra/compose.observability.yaml stop prometheus grafana loki promtail"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2"
+  }
+}

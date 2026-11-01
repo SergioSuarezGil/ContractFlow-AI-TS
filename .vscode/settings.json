@@ -1,0 +1,18 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "yaml.schemas": {
+    "schemas/grafana-datasource.schema.json": [
+      "infra/observability/grafana/provisioning/datasources/**/*.yaml",
+      "infra/observability/grafana/provisioning/datasources/**/*.yml"
+    ],
+    "schemas/grafana-dashboard-provider.schema.json": [
+      "infra/observability/grafana/provisioning/dashboards/**/*.yaml",
+      "infra/observability/grafana/provisioning/dashboards/**/*.yml"
+    ]
+  },
+  "files.associations": {
+    "**/infra/observability/grafana/provisioning/**/*.yaml": "yaml"
+  }
+}

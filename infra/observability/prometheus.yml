@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: contracts-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["contracts-api:3000"]
+        labels:
+          service: contracts-api
+
+  - job_name: ai-worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["ai-worker:3001"]
+        labels:
+          service: ai-worker
+
+  - job_name: pdf-worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["pdf-worker:3002"]
+        labels:
+          service: pdf-worker

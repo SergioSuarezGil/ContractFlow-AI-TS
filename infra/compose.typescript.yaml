@@ -1,0 +1,164 @@
+# App services. Secrets and connection strings come from repo-root `.env` via env_file.
+# Do not hardcode passwords here — only non-secret runtime overrides (build identity, memory).
+services:
+  contracts-api:
+    container_name: contractflow-contracts-api
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.app
+      args:
+        APP_NAME: contracts-api
+        APP_PORT: "3000"
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    cpus: 0.30
+    mem_limit: 256m
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ../.env
+    environment:
+      APP_SERVICE_NAME: contracts-api
+      APP_GIT_SHA: ${GIT_SHA:-unknown}
+      APP_BUILD_TIME: ${BUILD_TIME:-unknown}
+      NODE_OPTIONS: "--max-old-space-size=160"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      object-storage-init:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  ai-worker:
+    container_name: contractflow-ai-worker
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.app
+      args:
+        APP_NAME: ai-worker
+        APP_PORT: "3001"
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    cpus: 0.20
+    mem_limit: 160m
+    ports:
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:50051:50051"
+    env_file:
+      - ../.env
+    environment:
+      APP_SERVICE_NAME: ai-worker
+      APP_GIT_SHA: ${GIT_SHA:-unknown}
+      APP_BUILD_TIME: ${BUILD_TIME:-unknown}
+      AI_WORKER_GRPC_URL: 0.0.0.0:50051
+      NODE_OPTIONS: "--max-old-space-size=96"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "50051"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  pdf-worker:
+    container_name: contractflow-pdf-worker
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.app
+      args:
+        APP_NAME: pdf-worker
+        APP_PORT: "3002"
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    cpus: 0.20
+    mem_limit: 160m
+    ports:
+      - "127.0.0.1:3002:3002"
+    env_file:
+      - ../.env
+    environment:
+      APP_SERVICE_NAME: pdf-worker
+      APP_GIT_SHA: ${GIT_SHA:-unknown}
+      APP_BUILD_TIME: ${BUILD_TIME:-unknown}
+      NODE_OPTIONS: "--max-old-space-size=96"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      object-storage-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  web-demo:
+    container_name: contractflow-web-demo
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.web
+      args:
+        VITE_OIDC_AUTHORITY: ${VITE_OIDC_AUTHORITY:-http://localhost:8080/realms/contractflow}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-contractflow-web}
+        VITE_API_BASE: ${VITE_API_BASE:-}
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    cpus: 0.10
+    mem_limit: 32m
+    ports:
+      - "127.0.0.1:8088:80"
+    depends_on:
+      contracts-api:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped

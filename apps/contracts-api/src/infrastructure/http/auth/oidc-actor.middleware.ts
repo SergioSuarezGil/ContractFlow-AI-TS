@@ -5,8 +5,10 @@ import {
   type NestMiddleware,
 } from "@nestjs/common";
 import type { NextFunction, Request, Response } from "express";
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { ActorContext } from "../../../application/dto/actor.dto";
+import { requireOidcAudience, resolveAuthMode, type AuthMode } from "./auth-mode";
+import { InvalidJwtActorError, mapJwtPayloadToActor } from "./jwt-actor.mapper";
 
 type AuthedRequest = Request & { actor?: ActorContext };
 
@@ -16,10 +18,13 @@ export class OidcActorMiddleware implements NestMiddleware {
   private jwks?: ReturnType<typeof createRemoteJWKSet>;
   private readonly issuer: string;
   private readonly jwksUri: string;
-  private readonly authMode: string;
+  private readonly authMode: AuthMode;
+  private readonly audience?: string;
 
   constructor() {
-    this.authMode = (process.env.AUTH_MODE ?? "oidc").toLowerCase();
+    this.authMode = resolveAuthMode();
+    this.audience =
+      this.authMode === "oidc" ? requireOidcAudience() : undefined;
     this.issuer =
       process.env.OIDC_ISSUER ?? "http://localhost:8080/realms/contractflow";
     this.jwksUri =
@@ -60,30 +65,19 @@ export class OidcActorMiddleware implements NestMiddleware {
 
       const { payload } = await jwtVerify(token, this.jwks, {
         issuer: this.issuer,
+        audience: this.audience,
       });
-      req.actor = this.toActor(payload);
+      req.actor = mapJwtPayloadToActor(payload);
       next();
     } catch (error) {
+      if (error instanceof InvalidJwtActorError) {
+        next(new UnauthorizedException(error.message));
+        return;
+      }
       this.logger.warn(`OIDC auth failed: ${(error as Error).message}`);
       const unauthorized = new UnauthorizedException("Invalid or expired access token");
       next(unauthorized);
     }
   }
 
-  private toActor(payload: JWTPayload): ActorContext {
-    const ownerId = String(
-      payload.preferred_username ?? payload.sub ?? "",
-    ).trim();
-    if (!ownerId) {
-      throw new UnauthorizedException("Token missing subject");
-    }
-    const householdClaim = payload.household_id;
-    const householdId = Array.isArray(householdClaim)
-      ? String(householdClaim[0] ?? "").trim()
-      : String(householdClaim ?? "").trim();
-    return {
-      ownerId,
-      householdId: householdId || `hh_${ownerId}`,
-    };
-  }
 }

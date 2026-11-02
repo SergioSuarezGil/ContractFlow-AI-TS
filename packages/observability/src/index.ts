@@ -9,6 +9,13 @@ import type { NextFunction, Request, Response } from "express";
 
 export { getBuildInfo, type BuildInfo } from "./build-info";
 export { JsonLogger } from "./json-logger";
+export {
+  createLlmMetrics,
+  estimateLlmCostUsd,
+  DEFAULT_LLM_TARIFFS,
+  type LlmMetrics,
+  type LlmTariff,
+} from "./llm-metrics";
 
 export interface ServiceMetrics {
   registry: Registry;

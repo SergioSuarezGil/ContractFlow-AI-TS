@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { assertAllowedDocumentUpload } from "../../domain/document/allowed-content-types";
 import { ContractDocument } from "../../domain/document/contract-document";
+import { assertDocumentRole } from "../../domain/service-contract/value-objects";
 import { ForbiddenError, NotFoundError, ValidationError } from "../../domain/shared/domain-error";
 import type { ActorContext } from "../dto/actor.dto";
 import type { ContractDocumentRepository } from "../ports/contract-document.repository";
@@ -38,6 +39,7 @@ export class AttachDocumentUseCase {
       throw new ValidationError("Empty file upload");
     }
     assertAllowedDocumentUpload(command.fileName, command.contentType);
+    const role = assertDocumentRole(command.role);
 
     const contract = await this.contracts.findById(command.contractId);
     if (!contract) {
@@ -49,7 +51,7 @@ export class AttachDocumentUseCase {
 
     const documentId = randomUUID();
     const bucket = process.env.S3_BUCKET_DOCUMENTS ?? "documents";
-    const storageKey = `${command.actor.householdId}/${command.contractId}/${documentId}/${command.fileName}`;
+    const storageKey = `${command.actor.householdId}/${command.contractId}/${documentId}`;
 
     await this.storage.putObject({
       bucket,
@@ -63,7 +65,7 @@ export class AttachDocumentUseCase {
       contractId: contract.id,
       householdId: command.actor.householdId,
       ownerId: command.actor.ownerId,
-      role: command.role,
+      role,
       fileName: command.fileName,
       contentType: command.contentType,
       sizeBytes: command.body.length,
@@ -71,12 +73,8 @@ export class AttachDocumentUseCase {
     });
 
     try {
-      contract.attachDocument(
-        document.id,
-        document.role === "proposal" ? "proposal" : "current",
-      );
       await this.documents.save(document);
-      await this.contracts.save(contract);
+      await this.contracts.attachDocumentId(contract.id, document.id, role);
     } catch (error) {
       await this.storage.deleteObject(bucket, storageKey).catch(() => undefined);
       throw error;

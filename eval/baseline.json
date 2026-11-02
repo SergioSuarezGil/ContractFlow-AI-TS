@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "minFieldAccuracy": 0.8,
+  "minCitationValidity": 0.9,
+  "minAbstentionRecall": 0.75
+}

@@ -24,6 +24,7 @@ import { ListDocumentsUseCase } from "../../../application/use-cases/list-docume
 import { ListServiceContractsUseCase } from "../../../application/use-cases/list-service-contracts.use-case";
 import { RequestComparisonUseCase } from "../../../application/use-cases/request-comparison.use-case";
 import { UpdateServiceContractUseCase } from "../../../application/use-cases/update-service-contract.use-case";
+import { OutboxRelayService } from "../../messaging/outbox-relay.service";
 import { RabbitMqEventPublisher } from "../../messaging/rabbitmq-event-publisher";
 import { RabbitMqResultsConsumer } from "../../messaging/rabbitmq-results-consumer";
 import { MongoContractDocumentRepository } from "../../persistence/mongodb/mongo-contract-document.repository";
@@ -61,6 +62,7 @@ import { ContractsController } from "./contracts.controller";
     GetReportUseCase,
     DownloadReportUseCase,
     RabbitMqResultsConsumer,
+    OutboxRelayService,
     {
       provide: COMPARISON_LOOKUP,
       useExisting: AiWorkerGrpcClient,

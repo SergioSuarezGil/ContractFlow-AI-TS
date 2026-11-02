@@ -8,10 +8,12 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --max-warnings 0",
-    "test": "jest --passWithNoTests"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",
+    "@contractflow/events": "workspace:*",
     "@contractflow/observability": "workspace:*",
     "@grpc/grpc-js": "^1.13.4",
     "@grpc/proto-loader": "^0.7.15",

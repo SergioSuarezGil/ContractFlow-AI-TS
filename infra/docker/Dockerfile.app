@@ -13,18 +13,23 @@ FROM node:22-alpine AS deps
 ARG APP_NAME
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/observability/package.json packages/observability/
+COPY packages/events/package.json packages/events/
 COPY apps/${APP_NAME}/package.json apps/${APP_NAME}/
-RUN pnpm install --filter @contractflow/${APP_NAME}...
+RUN pnpm install --frozen-lockfile --filter @contractflow/${APP_NAME}...
 
 FROM deps AS build
 ARG APP_NAME
 COPY tsconfig.base.json ./
 COPY packages/observability packages/observability
+COPY packages/events packages/events
 COPY contracts contracts
 COPY apps/${APP_NAME} apps/${APP_NAME}
+RUN if [ -d "apps/${APP_NAME}/assets" ]; then echo "Including app assets"; fi
 WORKDIR /repo/packages/observability
+RUN pnpm exec tsc -p tsconfig.json
+WORKDIR /repo/packages/events
 RUN pnpm exec tsc -p tsconfig.json
 WORKDIR /repo/apps/${APP_NAME}
 RUN pnpm exec nest build \
@@ -49,6 +54,7 @@ LABEL org.opencontainers.image.title="contractflow-${APP_NAME}" \
 RUN addgroup -S contractflow && adduser -S contractflow -G contractflow
 COPY --from=build --chown=contractflow:contractflow /repo/node_modules /repo/node_modules
 COPY --from=build --chown=contractflow:contractflow /repo/packages/observability /repo/packages/observability
+COPY --from=build --chown=contractflow:contractflow /repo/packages/events /repo/packages/events
 COPY --from=build --chown=contractflow:contractflow /repo/contracts /repo/contracts
 COPY --from=build --chown=contractflow:contractflow /repo/apps/${APP_NAME}/node_modules /repo/apps/${APP_NAME}/node_modules
 COPY --from=build --chown=contractflow:contractflow /repo/apps/${APP_NAME}/package.json /repo/apps/${APP_NAME}/package.json

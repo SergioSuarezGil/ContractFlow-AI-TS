@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, ServiceUnavailableException } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { getBuildInfo } from "@contractflow/observability";
 import {
@@ -30,6 +30,7 @@ export class HealthController {
   }
 
   @Get("ready")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
       "Readiness probe (Mongo, RabbitMQ, optional gRPC ping to ai-worker)",
@@ -74,7 +75,16 @@ export class HealthController {
       }
     }
 
+    const criticalDown =
+      checks.mongodb?.status !== "up" || checks.rabbitmq?.status !== "up";
     const degraded = Object.values(checks).some((c) => c.status !== "up");
+    if (criticalDown) {
+      throw new ServiceUnavailableException({
+        status: "degraded",
+        version,
+        checks,
+      });
+    }
     return { status: degraded ? "degraded" : "ok", version, checks };
   }
 }

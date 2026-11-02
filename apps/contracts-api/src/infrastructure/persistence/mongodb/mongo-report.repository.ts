@@ -6,18 +6,29 @@ import { MONGO_DB } from "./mongo.module";
 
 @Injectable()
 export class MongoReportRepository implements ReportRepository {
+  private indexesReady = false;
+
   constructor(@Inject(MONGO_DB) private readonly db: Db) {}
 
   private collection() {
     return this.db.collection<ReportProps>("reports");
   }
 
+  private async ensureIndexes(): Promise<void> {
+    if (this.indexesReady) return;
+    await this.collection().createIndex({ id: 1 }, { unique: true });
+    await this.collection().createIndex({ jobId: 1 }, { unique: true });
+    this.indexesReady = true;
+  }
+
   async save(report: Report): Promise<void> {
+    await this.ensureIndexes();
     const snap = report.snapshot();
     await this.collection().updateOne({ id: snap.id }, { $set: snap }, { upsert: true });
   }
 
   async findById(id: string): Promise<Report | null> {
+    await this.ensureIndexes();
     const doc = await this.collection().findOne({ id });
     if (!doc) return null;
     return Report.rehydrate({

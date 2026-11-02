@@ -24,6 +24,8 @@ export function ContractsPage() {
     selected,
     documents,
     job,
+    comparisonStage,
+    analysisModeLabel,
     busy,
     message,
     error,
@@ -139,6 +141,8 @@ export function ContractsPage() {
 
               <ComparisonPanel
                 job={job}
+                stage={comparisonStage}
+                analysisModeLabel={analysisModeLabel}
                 disabled={busy}
                 canCompare={canCompare}
                 onCompare={() => {
@@ -148,7 +152,7 @@ export function ContractsPage() {
                       session,
                       selected.id,
                     );
-                    await pollJob(accepted.jobId);
+                    await pollJob(accepted.jobId, selected.id);
                   });
                 }}
                 onDownload={() => {

@@ -33,7 +33,7 @@ Shared technical contracts live under `contracts/` (OpenAPI + events). Do not sh
 - Prefer Docker Compose (`infra/compose.yaml` + `infra/compose.typescript.yaml`)
 - Optional observability: add `infra/compose.observability.yaml` (`pnpm obs:up`)
 - NestJS **12** + **Express** for HTTP apps; OpenAPI via Swagger (`/docs`, `pnpm openapi:export`)
-- Default LLM mode: `LLM_PROVIDER=mock` (no external API keys required)
+- Default LLM mode: `LLM_PROVIDER=mock` (no external API keys required); real path is `gemini` + `GOOGLE_API_KEY` (LangChain.js)
 - Never commit secrets; use `.env.example` as the twin template for `.env`
 
 ## Git

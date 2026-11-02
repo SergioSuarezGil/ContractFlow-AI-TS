@@ -46,6 +46,29 @@ export class MongoServiceContractRepository implements ServiceContractRepository
     await this.collection().deleteOne({ id });
   }
 
+  async attachDocumentId(
+    contractId: string,
+    documentId: string,
+    role: "current" | "proposal",
+  ): Promise<void> {
+    const field = role === "current" ? "currentDocumentIds" : "proposalDocumentIds";
+    const now = new Date();
+    const result = await this.collection().updateOne(
+      { id: contractId },
+      {
+        $addToSet: { [field]: documentId },
+        $set: { updatedAt: now },
+      },
+    );
+    if (result.matchedCount === 0) {
+      throw new Error(`Contract not found: ${contractId}`);
+    }
+    await this.collection().updateOne(
+      { id: contractId, status: "draft" },
+      { $set: { status: "active", updatedAt: now } },
+    );
+  }
+
   private toDomain(doc: ContractDocumentShape): ServiceContract {
     return ServiceContract.rehydrate({
       id: doc.id,

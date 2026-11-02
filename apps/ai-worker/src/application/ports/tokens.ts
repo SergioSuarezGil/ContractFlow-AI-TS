@@ -1,0 +1,1 @@
+export const CONTRACT_ANALYZER = Symbol("CONTRACT_ANALYZER");

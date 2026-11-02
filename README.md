@@ -7,7 +7,7 @@ This repository is the **TypeScript / NestJS** implementation (priority stack). 
 ## Stack
 
 - NestJS (Contracts API, AI Worker, PDF Worker)
-- MongoDB (incl. Vector Search locally)
+- MongoDB (document metadata, jobs, comparisons — **no vector search in this repo**)
 - RabbitMQ
 - S3-compatible object storage (LocalStack locally; MinIO-compatible SDK)
 - Keycloak (OIDC) + Google login mock on the web demo
@@ -95,6 +95,7 @@ apps/
   contracts-api/
   ai-worker/
   pdf-worker/
+  mcp-server/       # MCP tools → HTTP API (Bearer passthrough)
   web-demo/         # React + Tailwind + Preline (modular SPA)
 contracts/          # OpenAPI + event schemas (shared technical contracts)
 infra/              # Docker Compose + service config (see infra/README.md)
@@ -134,29 +135,57 @@ pnpm openapi:sync
 
 Swagger UI: http://localhost:3000/docs · readiness (gRPC): http://localhost:3000/health/ready
 
-## Async comparison flow (mock LLM)
+## Async comparison flow
+
+Set `LLM_PROVIDER=mock` (default) or `gemini` with `GOOGLE_API_KEY` on **ai-worker** (LangChain.js `ChatGoogleGenerativeAI`). Optional: `GEMINI_MODEL` (default `gemini-2.0-flash`).
 
 ```bash
 # After contract + current/proposal docs exist:
 curl -sS -X POST "http://localhost:3000/api/v1/contracts/$CONTRACT_ID/comparisons" \
-  -H 'X-Owner-Id: user_demo' -H 'X-Household-Id: hh_demo'
-# -> { jobId, status: PROCESSING }
+  -H "Authorization: Bearer $TOKEN"
+# -> { jobId, status: PENDING|PROCESSING }
 
 curl -sS "http://localhost:3000/api/v1/jobs/$JOB_ID" \
-  -H 'X-Owner-Id: user_demo' -H 'X-Household-Id: hh_demo'
+  -H "Authorization: Bearer $TOKEN"
 # -> status COMPLETED + reportId
 
 curl -sS -o report.pdf "http://localhost:3000/api/v1/reports/$REPORT_ID/download" \
-  -H 'X-Owner-Id: user_demo' -H 'X-Household-Id: hh_demo'
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-## MVP scope
+## MCP server
 
-1. ~~Upload current contract + alternative proposal PDFs~~
-2. ~~Request an async comparison job~~
-3. ~~Download a comparative PDF report (Mock LLM locally)~~
+Configure Cursor/your MCP client with stdio command and env:
 
-URL scraping and rich UI are out of MVP scope. A minimal web demo will be added after the API/workers path is stable.
+- `CONTRACTFLOW_API_BASE` (default `http://127.0.0.1:3000`)
+- `CONTRACTFLOW_BEARER_TOKEN` — same Bearer token as HTTP
+
+```bash
+pnpm mcp-server:build
+pnpm mcp-server:start
+```
+
+Tools: `compare_contracts`, `get_comparison_job`.
+
+## Eval (mock analyzer)
+
+```bash
+pnpm eval
+```
+
+Runs synthetic cases against the mock analyzer and fails if metrics drop below `eval/baseline.json`.
+
+## Demo walkthrough
+
+See [docs/demo-script.md](./docs/demo-script.md) (~5 min happy path + empty/scanned PDF).
+
+## Scope (honest)
+
+**In repo:** OIDC, document upload, PDF/TXT extraction, mock/Gemini (LangChain) structured comparison, citation checks, outbox/idempotent workers, multipage PDF reports, web polling UI, MCP proxy, Prometheus metrics.
+
+**Not in repo:** vector search, OCR, multi-agent orchestration, Python worker implementation, production CI/CD.
+
+**Python parity (later):** same `PROMPT_VERSION` / Zod↔Pydantic schema + `langchain_google_genai.ChatGoogleGenerativeAI` + structured output behind the same analyzer port.
 
 ## License
 

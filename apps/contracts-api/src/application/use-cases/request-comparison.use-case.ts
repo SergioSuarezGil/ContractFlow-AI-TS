@@ -4,14 +4,9 @@ import { Job } from "../../domain/job/job";
 import { ForbiddenError, NotFoundError } from "../../domain/shared/domain-error";
 import type { ActorContext } from "../dto/actor.dto";
 import { createEnvelope } from "../messaging/event-envelope";
-import type { EventPublisher } from "../ports/event-publisher";
 import type { JobRepository } from "../ports/job.repository";
 import type { ServiceContractRepository } from "../ports/service-contract.repository";
-import {
-  EVENT_PUBLISHER,
-  JOB_REPOSITORY,
-  SERVICE_CONTRACT_REPOSITORY,
-} from "../ports/tokens";
+import { JOB_REPOSITORY, SERVICE_CONTRACT_REPOSITORY } from "../ports/tokens";
 
 @Injectable()
 export class RequestComparisonUseCase {
@@ -20,8 +15,6 @@ export class RequestComparisonUseCase {
     private readonly contracts: ServiceContractRepository,
     @Inject(JOB_REPOSITORY)
     private readonly jobs: JobRepository,
-    @Inject(EVENT_PUBLISHER)
-    private readonly publisher: EventPublisher,
   ) {}
 
   async execute(actor: ActorContext, contractId: string) {
@@ -38,15 +31,6 @@ export class RequestComparisonUseCase {
     const correlationId = randomUUID();
     const eventId = randomUUID();
     const snap = contract.snapshot();
-
-    const job = Job.create({
-      id: jobId,
-      contractId: contract.id,
-      householdId: actor.householdId,
-      ownerId: actor.ownerId,
-      correlationId,
-    });
-    await this.jobs.save(job);
 
     const envelope = createEnvelope({
       eventId,
@@ -65,8 +49,18 @@ export class RequestComparisonUseCase {
       },
     });
 
-    await this.publisher.publish("comparison.requested.v1", envelope);
-    job.markProcessing();
+    const job = Job.create({
+      id: jobId,
+      contractId: contract.id,
+      householdId: actor.householdId,
+      ownerId: actor.ownerId,
+      correlationId,
+      outbox: {
+        routingKey: "comparison.requested.v1",
+        envelope: envelope as unknown as Record<string, unknown>,
+        publishedAt: null,
+      },
+    });
     await this.jobs.save(job);
 
     return {

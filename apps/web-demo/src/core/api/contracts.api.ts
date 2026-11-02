@@ -1,41 +1,10 @@
 import { authService, type SessionIdentity } from "../auth/auth.service";
+import type { components } from "./generated/openapi";
 
-/** Hand-written DTOs until `pnpm openapi:export` + codegen lands. */
-export interface ServiceContract {
-  id: string;
-  householdId: string;
-  ownerId: string;
-  serviceType: string;
-  providerName: string;
-  title: string;
-  notes: string;
-  status: string;
-  currentDocumentIds: string[];
-  proposalDocumentIds: string[];
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
-
-export interface ContractDocument {
-  id: string;
-  contractId: string;
-  role: "current" | "proposal";
-  fileName: string;
-  contentType: string;
-  sizeBytes: number;
-  createdAt: string;
-}
-
-export interface Job {
-  id: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  contractId: string;
-  comparisonId?: string;
-  reportId?: string;
-  errorMessage?: string;
-  updatedAt: string;
-}
+export type ServiceContract = components["schemas"]["ServiceContractResponseDto"];
+export type ContractDocument = components["schemas"]["ContractDocumentResponseDto"];
+export type Job = components["schemas"]["JobResponseDto"];
+export type CreateContractInput = components["schemas"]["CreateContractDto"];
 
 const apiBase = import.meta.env.VITE_API_BASE ?? "";
 
@@ -78,15 +47,7 @@ export const contractsApi = {
   list(session: SessionIdentity) {
     return request<ServiceContract[]>("/api/v1/contracts", session);
   },
-  create(
-    session: SessionIdentity,
-    body: {
-      serviceType: string;
-      providerName: string;
-      title: string;
-      notes?: string;
-    },
-  ) {
+  create(session: SessionIdentity, body: CreateContractInput) {
     return request<ServiceContract>("/api/v1/contracts", session, {
       method: "POST",
       body: JSON.stringify(body),
@@ -117,7 +78,7 @@ export const contractsApi = {
     );
   },
   requestComparison(session: SessionIdentity, contractId: string) {
-    return request<{ jobId: string; status: string }>(
+    return request<components["schemas"]["ComparisonAcceptedDto"]>(
       `/api/v1/contracts/${contractId}/comparisons`,
       session,
       { method: "POST" },

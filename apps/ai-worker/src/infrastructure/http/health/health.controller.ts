@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, ServiceUnavailableException } from "@nestjs/common";
 import { getBuildInfo } from "@contractflow/observability";
 import {
   HealthCheck,
@@ -46,7 +46,12 @@ export class HealthController {
         message: error instanceof Error ? error.message : String(error),
       };
     }
+    const criticalDown =
+      checks.mongodb?.status !== "up" || checks.rabbitmq_consumer?.status !== "up";
     const degraded = Object.values(checks).some((c) => c.status !== "up");
+    if (criticalDown) {
+      throw new ServiceUnavailableException({ status: "degraded", version, checks });
+    }
     return { status: degraded ? "degraded" : "ok", version, checks };
   }
 }

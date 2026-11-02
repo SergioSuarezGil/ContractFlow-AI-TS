@@ -21,7 +21,7 @@
 | Coolify | Optional self-host later (deferred) |
 | Tempo / traces | Optional distributed tracing |
 | Alerts | e.g. `contractflow_process_up == 0` |
-| Real LLM provider | Keep `LLM_PROVIDER=mock` until keys are intentional |
+| Real LLM provider | `LLM_PROVIDER=gemini` + `GOOGLE_API_KEY` when intentional; default remains mock |
 
 ```mermaid
 flowchart LR

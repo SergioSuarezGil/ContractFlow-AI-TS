@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../shared/ui/Button";
-import { SERVICE_TYPES } from "../constants";
+import { SERVICE_TYPES, type ServiceType } from "../constants";
 
 interface CreateContractFormProps {
   disabled?: boolean;
   onSubmit: (body: {
-    serviceType: string;
+    serviceType: ServiceType;
     providerName: string;
     title: string;
     notes?: string;
@@ -13,7 +13,7 @@ interface CreateContractFormProps {
 }
 
 export function CreateContractForm({ disabled, onSubmit }: CreateContractFormProps) {
-  const [serviceType, setServiceType] = useState<string>(SERVICE_TYPES[0]);
+  const [serviceType, setServiceType] = useState<ServiceType>(SERVICE_TYPES[0]);
   const [providerName, setProviderName] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -39,7 +39,7 @@ export function CreateContractForm({ disabled, onSubmit }: CreateContractFormPro
         <select
           className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
           value={serviceType}
-          onChange={(e) => setServiceType(e.target.value)}
+          onChange={(e) => setServiceType(e.target.value as ServiceType)}
           disabled={disabled}
         >
           {SERVICE_TYPES.map((type) => (

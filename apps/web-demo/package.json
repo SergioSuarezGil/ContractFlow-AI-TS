@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "echo \"no lint configured\"",
-    "test": "echo \"no tests yet\""
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "oidc-client-ts": "^3.2.0",
@@ -26,6 +27,7 @@
     "openapi-typescript": "^7.10.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2"
+    "vite": "^6.2.2",
+    "vitest": "^3.0.9"
   }
 }

@@ -17,9 +17,9 @@ ENV VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY \
     VITE_APP_GIT_SHA=$GIT_SHA \
     VITE_APP_BUILD_TIME=$BUILD_TIME
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web-demo/package.json apps/web-demo/
-RUN pnpm install --filter @contractflow/web-demo...
+RUN pnpm install --frozen-lockfile --filter @contractflow/web-demo...
 COPY apps/web-demo apps/web-demo
 WORKDIR /repo/apps/web-demo
 RUN pnpm run build

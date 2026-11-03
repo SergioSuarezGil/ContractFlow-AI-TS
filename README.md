@@ -2,7 +2,7 @@
 
 AI-powered platform to manage **personal service contracts** and compare the **current offer vs alternative proposals** from uploaded PDFs. Analysis and comparative PDF reports run **asynchronously** via microservices.
 
-This repository is the **TypeScript / NestJS** implementation (priority stack). A separate Python/FastAPI implementation will share the same HTTP and event contracts later.
+This repository is the **TypeScript / NestJS** implementation.
 
 ## Stack
 
@@ -99,7 +99,6 @@ apps/
   web-demo/         # React + Tailwind + Preline (modular SPA)
 contracts/          # OpenAPI + event schemas (shared technical contracts)
 infra/              # Docker Compose + service config (see infra/README.md)
-docs/               # ADRs and architecture notes
 ```
 
 Local orchestration is **Docker Compose** (not Kubernetes). Details and diagrams: [`infra/README.md`](./infra/README.md).
@@ -175,17 +174,11 @@ pnpm eval
 
 Runs synthetic cases against the mock analyzer and fails if metrics drop below `eval/baseline.json`.
 
-## Demo walkthrough
-
-See [docs/demo-script.md](./docs/demo-script.md) (~5 min happy path + empty/scanned PDF).
-
 ## Scope (honest)
 
 **In repo:** OIDC, document upload, PDF/TXT extraction, mock/Gemini (LangChain) structured comparison, citation checks, outbox/idempotent workers, multipage PDF reports, web polling UI, MCP proxy, Prometheus metrics.
 
-**Not in repo:** vector search, OCR, multi-agent orchestration, Python worker implementation, production CI/CD.
-
-**Python parity (later):** same `PROMPT_VERSION` / Zod↔Pydantic schema + `langchain_google_genai.ChatGoogleGenerativeAI` + structured output behind the same analyzer port.
+**Not in repo:** vector search, OCR, multi-agent orchestration, production CI/CD.
 
 ## License
 

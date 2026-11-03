@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (window.location.pathname.startsWith("/callback")) {
-          const next = await authService.handleCallback();
+          const next = await authService.consumeRedirectCallback();
           if (!cancelled) {
             setSession(next);
             window.history.replaceState({}, document.title, "/");

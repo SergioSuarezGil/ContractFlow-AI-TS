@@ -150,7 +150,6 @@ Credentials for local demo live in **gitignored** `.env` (copy from `.env.exampl
 | `infra/keycloak/` | Realm import JSON |
 | `infra/rabbitmq/` | Broker definitions + conf |
 | `infra/observability/` | Prometheus scrape config + Grafana provisioning |
-| `docs/architecture/observability.md` | Metrics / health / gRPC probe notes |
 
 ## CPU / memory limits
 

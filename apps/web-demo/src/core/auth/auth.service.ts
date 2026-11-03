@@ -36,6 +36,14 @@ function postLogoutRedirectUri(): string {
 
 const PROVIDER_KEY = "contractflow.auth.provider";
 
+/**
+ * React Strict Mode mounts the callback twice in Vite. Keycloak authorization
+ * codes are single-use, so a second exchange returns "Code not valid" and the
+ * UI wipes the session. Share one exchange per callback URL.
+ */
+let redirectCallbackInflight: { url: string; pending: Promise<SessionIdentity> } | null =
+  null;
+
 const userManager = new UserManager({
   authority,
   client_id: clientId,
@@ -169,6 +177,16 @@ export const authService = {
     const user = await userManager.signinRedirectCallback();
     writeProvider("keycloak");
     return toIdentity(user, "keycloak");
+  },
+
+  consumeRedirectCallback(): Promise<SessionIdentity> {
+    const url = window.location.href;
+    if (redirectCallbackInflight?.url === url) {
+      return redirectCallbackInflight.pending;
+    }
+    const pending = this.handleCallback();
+    redirectCallbackInflight = { url, pending };
+    return pending;
   },
 
   async logout(): Promise<void> {
